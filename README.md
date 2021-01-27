@@ -27,7 +27,7 @@ SubPixel in initialized with a **precision**, which specifies how many bits to u
 ## Initialization
 There are three parameters to the SubPixel constructor
 ```c
-TheVaporTrail_SubPixel(uint8_t precision, uint8_t flags, TheVaporTrail_SubPixelFuncs* params);
+TheVaporTrail_SubPixel(uint8_t precision, uint8_t flags, TheVaporTrail_SubPixel_Params* params);
 TheVaporTrail_SubPixel(uint8_t precision, uint8_t flags, Adafruit_NeoPixel* neopixels);
 ```
 ### Precision
