@@ -1,0 +1,17 @@
+TheVaporTrail_SubPixel	KEYWORD1
+
+
+precision			KEYWORD2
+one					KEYWORD2
+fractionMask		KEYWORD2
+length				KEYWORD2
+setPixel			KEYWORD2
+scaleColor			KEYWORD2
+blendColor			KEYWORD2
+
+TheVaporTrail_SubPixelFuncs			KEYWORD2
+
+SUBPIX_WRAP			LITERAL1
+SUBPIX_OP_ADD		LITERAL1
+SUBPIX_OP_MAX		LITERAL1
+SUBPIX_OP_COPY		LITERAL1
