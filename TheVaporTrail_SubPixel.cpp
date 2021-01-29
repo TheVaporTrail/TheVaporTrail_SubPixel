@@ -144,6 +144,8 @@ uint16_t TheVaporTrail_SubPixel::getPixelCount(void)
 	else if (_neopixels != NULL)
 		count = _neopixels->numPixels();
 	#endif
+	else
+		count = 0;
 	 
 	
 	return count;
@@ -177,7 +179,7 @@ void TheVaporTrail_SubPixel::setPixelColor(uint16_t location, uint32_t color)
 }
 
 
-uint32_t ColorHue(uint16_t hue, uint16_t range = 0xff, uint8_t brightness = 0xff)
+uint32_t ColorHue(uint16_t hue, uint16_t range /*= 0xff*/, uint8_t brightness /*= 0xff*/)
 {
   uint16_t phase = range/3;
   uint16_t r, g, b;
