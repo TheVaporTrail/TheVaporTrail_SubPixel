@@ -2,16 +2,21 @@
 //
 //	TheVaporTrail_SubPixel.cpp
 //
-//	Created by David Kaufman
-//		0.1.0: January 20, 2021
-//
-//=================================================================================
+//----------------------------------------------------------------------------------------
+// (c) 2021 David Kaufman
+// Released under the MIT license
+// https://github.com/TheVaporTrail/TheVaporTrail_SubPixel
+//========================================================================================
 
 #include <TheVaporTrail_SubPixel.h>
 
 #define SUBPIX_OP_MASK	(0x3 << 1)
 
 
+//---------------------------------------------------------------------------------
+//	Init
+//		common initialization for the constructors
+//---------------------------------------------------------------------------------
 void TheVaporTrail_SubPixel::init(uint8_t precision, uint8_t settings)
 {
 	_precision = precision;
@@ -26,6 +31,9 @@ void TheVaporTrail_SubPixel::init(uint8_t precision, uint8_t settings)
 	_mask = _one - 1;
 }
 
+//---------------------------------------------------------------------------------
+//	constructor with TheVaporTrail_SubPixel_Params
+//---------------------------------------------------------------------------------
 TheVaporTrail_SubPixel::TheVaporTrail_SubPixel(uint8_t precision, uint8_t settings, TheVaporTrail_SubPixel_Params* params)
 {
 	init(precision, settings);
@@ -33,6 +41,9 @@ TheVaporTrail_SubPixel::TheVaporTrail_SubPixel(uint8_t precision, uint8_t settin
 }
 
 #ifdef ARDUINO
+//---------------------------------------------------------------------------------
+//	constructor with Adafruit_NeoPixel
+//---------------------------------------------------------------------------------
 TheVaporTrail_SubPixel::TheVaporTrail_SubPixel(uint8_t precision, uint8_t settings, Adafruit_NeoPixel* neopixels)
 {
 	init(precision, settings);
@@ -40,46 +51,73 @@ TheVaporTrail_SubPixel::TheVaporTrail_SubPixel(uint8_t precision, uint8_t settin
 }
 #endif
 
+//---------------------------------------------------------------------------------
+//	destructor
+//---------------------------------------------------------------------------------
 TheVaporTrail_SubPixel::~TheVaporTrail_SubPixel(void)
 {
 }
 
+//---------------------------------------------------------------------------------
+//	Length
+//		Returns the length as a fixed-point value
+//---------------------------------------------------------------------------------
 uint32_t TheVaporTrail_SubPixel::length(void)
 {
 	return (getPixelCount() << _precision);
 }
 
-
+//---------------------------------------------------------------------------------
+//	Set Color
+//---------------------------------------------------------------------------------
 void TheVaporTrail_SubPixel::setColor(uint32_t location, uint32_t color, uint16_t width)
 {
 	uint32_t srcColor, dstColor;
 	uint8_t  amount;
+	// Convert the fixed-point location to an integer position in the LED strip
 	uint16_t loc    = (location >> _precision);
+	// Determine how much of the current position is available to fill. This is
+	// the distance from the sub-pixel location to the next integer location 
 	uint8_t  remain = _one - (location & _mask);
+	// The LED count is used for wrapping the position
 	uint16_t count = getPixelCount();
 	
+	// Loop as long as their is "width" remaining to fill into the LEDs
 	while (width > 0)
 	{
 		if (_settings & SUBPIX_WRAP)
 			loc = loc % count;
-			
+		
+		// Determine how much of the current LED to fill with the color
 		amount = (width < remain) ? width : remain;
+		
+		// And remove that amount from the width.
 		width -= amount;
 		
+		// Scale (adjust the brightness of) the color according to how much
+		// of the LED we are going to fill
 		srcColor = scaleColor(color, amount);
 		
+		// Get the current color in the pixel, to use for blending
 		dstColor = getPixelColor(loc);
 	
+		// Blend the new color with the color currently in the pixel.
 		dstColor = blendColor(dstColor, srcColor, _blendMode);
 		
+		// Update the pixel color
 		setPixelColor(loc, dstColor);
 		
+		// After the first LED, we now can fill up to the entire LED.
 		remain = _one;
+		
+		// Move to the next LED in the strip
 		loc++;
 	}
 }
 
-
+//---------------------------------------------------------------------------------
+//	Scale Color
+//---------------------------------------------------------------------------------
 uint32_t TheVaporTrail_SubPixel::scaleColor(uint32_t color, uint8_t fraction)
 {
 	uint32_t clr = color;
@@ -94,7 +132,9 @@ uint32_t TheVaporTrail_SubPixel::scaleColor(uint32_t color, uint8_t fraction)
 	return clr; 
 }
 
-
+//---------------------------------------------------------------------------------
+//	Blend Color
+//---------------------------------------------------------------------------------
 uint32_t TheVaporTrail_SubPixel::blendColor(uint32_t dstColor, uint32_t srcColor, uint8_t blendOp)
 {
 	uint8_t r, g, b, c;
@@ -134,6 +174,9 @@ uint32_t TheVaporTrail_SubPixel::blendColor(uint32_t dstColor, uint32_t srcColor
 	return dstColor;
 }
 
+//---------------------------------------------------------------------------------
+//	Get Pixel Count
+//---------------------------------------------------------------------------------
 uint16_t TheVaporTrail_SubPixel::getPixelCount(void)
 {
 	uint32_t count;
@@ -151,6 +194,10 @@ uint16_t TheVaporTrail_SubPixel::getPixelCount(void)
 	return count;
 }
 
+//---------------------------------------------------------------------------------
+//	Get Pixel Color
+//		location: integer index into LED list
+//---------------------------------------------------------------------------------
 uint32_t TheVaporTrail_SubPixel::getPixelColor(uint16_t location)
 {
 	uint32_t color;
@@ -168,6 +215,9 @@ uint32_t TheVaporTrail_SubPixel::getPixelColor(uint16_t location)
 	return color;
 }
 
+//---------------------------------------------------------------------------------
+//	Set Pixel Color
+//---------------------------------------------------------------------------------
 void TheVaporTrail_SubPixel::setPixelColor(uint16_t location, uint32_t color)
 {
 	if (_params != NULL && _params->setPixelColor != NULL)
@@ -178,7 +228,15 @@ void TheVaporTrail_SubPixel::setPixelColor(uint16_t location, uint32_t color)
 	#endif
 }
 
+//=================================================================================
+//
+//	Utilities
+//
+//=================================================================================
 
+//---------------------------------------------------------------------------------
+//	Color Hue
+//---------------------------------------------------------------------------------
 uint32_t ColorHue(uint16_t hue, uint16_t range /*= 0xff*/, uint8_t brightness /*= 0xff*/)
 {
   uint16_t phase = range/3;
