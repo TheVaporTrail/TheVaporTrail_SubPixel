@@ -22,7 +22,10 @@ SubPixel in initialized with a **precision**, which specifies how many bits to u
 + **comparison**: Compares the smoothness of the transitions with different precision values
 + **hues**: Slowly moves a sequence of colors along the strip
 + **blend**: Demonstrates color blending
-
+### More examples
++ **basic_custom_fastled**: Demonstrates using `TheVaporTrail_SubPixel_Params` constructor to work with the `FastLED` LED data
++ **basic_custom_neopixel**: Demonstrates using `TheVaporTrail_SubPixel_Params` constructor to work with an `Adafruit_NeoPixel` strip
++ **hue_comparison**: Comparison of smooth and non-smooth moving of rainbow colors.
 
 ## Initialization
 There are three parameters to the SubPixel constructor
