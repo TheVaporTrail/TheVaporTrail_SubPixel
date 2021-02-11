@@ -23,6 +23,7 @@ void TheVaporTrail_SubPixel::init(uint8_t precision, uint8_t settings)
 	_settings = settings;
 	_blendMode = (_settings & SUBPIX_OP_MASK);
 	_params = NULL;
+	_alpha = 0xff;
 	#ifdef ARDUINO
 	_neopixels = NULL;
 	#endif
@@ -96,7 +97,7 @@ void TheVaporTrail_SubPixel::setColor(uint32_t location, uint32_t color, uint16_
 		
 		// Scale (adjust the brightness of) the color according to how much
 		// of the LED we are going to fill
-		srcColor = scaleColor(color, amount);
+		srcColor = scaleColor(color, amount, _alpha);
 		
 		// Get the current color in the pixel, to use for blending
 		dstColor = getPixelColor(loc);
@@ -118,17 +119,63 @@ void TheVaporTrail_SubPixel::setColor(uint32_t location, uint32_t color, uint16_
 //---------------------------------------------------------------------------------
 //	Scale Color
 //---------------------------------------------------------------------------------
-uint32_t TheVaporTrail_SubPixel::scaleColor(uint32_t color, uint8_t fraction)
+uint32_t TheVaporTrail_SubPixel::scaleColor(uint32_t color, uint8_t fraction, uint8_t alpha)
 {
 	uint32_t clr = color;
-
-	if (fraction < _one)
-	{
-		clr  = ((((color >> 16) & 0xff) * fraction) / _one) << 16;
-		clr |= ((((color >>  8) & 0xff) * fraction) / _one) <<  8;
-		clr |= ((((color      ) & 0xff) * fraction) / _one);
-	}
-
+	
+	// Set to 1 to use the same lines for every computation.
+	// This uses less code, but takes more time
+	#if 0 
+		// Multiply each color by the fraction and the alpha
+		uint16_t n = fraction * alpha;
+		uint16_t d = 0xff << _precision;
+		clr  = ((((color >> 16) & 0xff) * n) / d ) << 16;
+		clr |= ((((color >>  8) & 0xff) * n) / d ) <<  8;
+		clr |= ((((color      ) & 0xff) * n) / d );
+	#endif
+	
+	// Set to 1 to use optimized statements
+	// This uses more code, but takes less time. If the alpha is 100% and the fraction 
+	// is 1.0, then only two tests are performed. The risk is that there are four
+	// code paths.
+	#if 1 
+		// If the alpha is 100%
+		if (alpha == 0xff)
+		{
+			// And the fraction is less than 1.0
+			if (fraction < _one)
+			{
+				// Then multiply each color by the fraction
+				clr  = ((((color >> 16) & 0xff) * fraction) >> _precision ) << 16;
+				clr |= ((((color >>  8) & 0xff) * fraction) >> _precision ) <<  8;
+				clr |= ((((color      ) & 0xff) * fraction) >> _precision );
+			}
+			// Else (if the fraction is 1.0)
+			// Then return the color unchanged
+		}
+		// If the alpha is not 100%
+		else
+		{
+			// And the fraction is 1.0
+			if (fraction == _one)
+			{
+				// Then multiply each color by the alpha value
+				clr  = ((((color >> 16) & 0xff) * alpha) / 0xff) << 16;
+				clr |= ((((color >>  8) & 0xff) * alpha) / 0xff) <<  8;
+				clr |= ((((color      ) & 0xff) * alpha) / 0xff);
+			}
+			// Else, if the fraction is less than 1.0
+			else
+			{
+				// Then multiply each color by the fraction and the alpha value
+				uint16_t n = fraction * alpha;
+				uint16_t d = (uint16_t)0xff << _precision;
+				clr  = ((((color >> 16) & 0xff) * n) / d ) << 16;
+				clr |= ((((color >>  8) & 0xff) * n) / d ) <<  8;
+				clr |= ((((color      ) & 0xff) * n) / d );
+			}
+		}
+	#endif
 	return clr; 
 }
 
@@ -172,6 +219,14 @@ uint32_t TheVaporTrail_SubPixel::blendColor(uint32_t dstColor, uint32_t srcColor
 	dstColor = ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
 
 	return dstColor;
+}
+
+//---------------------------------------------------------------------------------
+//	Get Pixel Count
+//---------------------------------------------------------------------------------
+void TheVaporTrail_SubPixel::setAlpha(uint8_t alpha)
+{
+	_alpha = alpha;
 }
 
 //---------------------------------------------------------------------------------

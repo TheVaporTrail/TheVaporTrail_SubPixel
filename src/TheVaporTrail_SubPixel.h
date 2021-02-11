@@ -87,10 +87,12 @@ class TheVaporTrail_SubPixel {
 		void setColor(uint32_t location, uint32_t color, uint16_t width);
 		
 		// Scale Color: scale each of the channels of a color
-		uint32_t scaleColor(uint32_t color, uint8_t fraction);
+		uint32_t scaleColor(uint32_t color, uint8_t fraction, uint8_t alpha);
 		
 		// Blend two colors together according to the blendOp (see SUBPIX_OP_.., above)
 		uint32_t blendColor(uint32_t srcColor, uint32_t dstColor, uint8_t blendOp);
+		
+		void setAlpha(uint8_t alpha);
 		
 	private:
 	
@@ -99,6 +101,7 @@ class TheVaporTrail_SubPixel {
 		uint16_t			_mask;
 		uint8_t				_settings;
 		uint8_t				_blendMode;
+		uint8_t				_alpha;
 		#ifdef ARDUINO
 		Adafruit_NeoPixel*	_neopixels;
 		#endif
